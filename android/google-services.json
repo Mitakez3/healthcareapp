@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1012248046510",
+    "firebase_url": "https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "healthyapp-dfcc0",
+    "storage_bucket": "healthyapp-dfcc0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1012248046510:android:3269f96b017ab0d66a363f",
+        "android_client_info": {
+          "package_name": "com.myapp.healthyapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPNlxKHjtYIDn1-jUYOf6ZnSEdFkciVAQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
