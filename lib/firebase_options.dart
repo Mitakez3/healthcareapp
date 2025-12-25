@@ -46,7 +46,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1012248046510',
     projectId: 'healthyapp-dfcc0',
     authDomain: 'healthyapp-dfcc0.firebaseapp.com',
-    databaseURL: 'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'healthyapp-dfcc0.firebasestorage.app',
     measurementId: 'G-JNRDLH2PQR',
   );
@@ -56,7 +57,8 @@ class DefaultFirebaseOptions {
     appId: '1:1012248046510:android:95888a3204e4c6e06a363f',
     messagingSenderId: '1012248046510',
     projectId: 'healthyapp-dfcc0',
-    databaseURL: 'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'healthyapp-dfcc0.firebasestorage.app',
   );
 
@@ -65,7 +67,8 @@ class DefaultFirebaseOptions {
     appId: '1:1012248046510:ios:87ec3f5bca1412406a363f',
     messagingSenderId: '1012248046510',
     projectId: 'healthyapp-dfcc0',
-    databaseURL: 'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'healthyapp-dfcc0.firebasestorage.app',
     iosBundleId: 'com.example.healthcareapp',
   );
@@ -75,7 +78,8 @@ class DefaultFirebaseOptions {
     appId: '1:1012248046510:ios:87ec3f5bca1412406a363f',
     messagingSenderId: '1012248046510',
     projectId: 'healthyapp-dfcc0',
-    databaseURL: 'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'healthyapp-dfcc0.firebasestorage.app',
     iosBundleId: 'com.example.healthcareapp',
   );
@@ -86,7 +90,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1012248046510',
     projectId: 'healthyapp-dfcc0',
     authDomain: 'healthyapp-dfcc0.firebaseapp.com',
-    databaseURL: 'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://healthyapp-dfcc0-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'healthyapp-dfcc0.firebasestorage.app',
     measurementId: 'G-XRWC6PTXL6',
   );
