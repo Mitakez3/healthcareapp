@@ -9,6 +9,7 @@ import '../activity/workout_schedule_screen.dart';
 import '../wellness/breathing_screen.dart';
 import '../../services/gps_service.dart';
 import '../../app_theme.dart';
+import '../health/bmi_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -36,145 +37,233 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (_isTracking) {
       _gpsService.startTracking();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã bật GPS! Hãy bắt đầu di chuyển.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Đã bật GPS! Hãy bắt đầu di chuyển.")),
+      );
     } else {
       _gpsService.stopTracking();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã dừng theo dõi.")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Đã dừng theo dõi.")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (user == null) return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
+    if (user == null)
+      return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: StreamBuilder<DatabaseEvent>(
-          stream: _dbRef.child('users/${user!.uid}').onValue,
-          builder: (context, snapshot) {
-            String firstName = "Bạn";
-            int steps = 0, calories = 0, heartRate = 0;
-            int distance = 0;
-            double sleepHours = 0.0, water = 0.0;
-            String stress = "Thấp";
+        stream: _dbRef.child('users/${user!.uid}').onValue,
+        builder: (context, snapshot) {
+          String firstName = "Bạn";
+          int steps = 0, calories = 0, heartRate = 0;
+          int distance = 0;
+          double sleepHours = 0.0, water = 0.0;
+          String stress = "Thấp";
+          String bmi = "--"; // Biến BMI mặc định
+          Map userProfile = {};
+          if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+            final data = snapshot.data!.snapshot.value as Map;
+            final profile = data['profile'] ?? {};
+            final health = data['health_data'] ?? {};
 
-            if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-              final data = snapshot.data!.snapshot.value as Map;
-              final profile = data['profile'] ?? {};
-              final health = data['health_data'] ?? {};
+            userProfile = profile;
 
-              firstName = (profile['fullName'] ?? user!.displayName ?? "User").trim().split(" ").last;
+            firstName = (profile['fullName'] ?? user!.displayName ?? "User")
+                .trim()
+                .split(" ")
+                .last;
 
-              steps = (health['steps'] as num?)?.toInt() ?? 0;
-              calories = (health['calories'] as num?)?.toInt() ?? 0;
-              heartRate = (health['heart_rate'] as num?)?.toInt() ?? 0;
-              distance = (health['distance'] as num?)?.toInt() ?? 0;
-              sleepHours = (health['sleep_hours'] as num?)?.toDouble() ?? 0.0;
-              water = (health['water_liters'] as num?)?.toDouble() ?? 0.0;
+            steps = (health['steps'] as num?)?.toInt() ?? 0;
+            calories = (health['calories'] as num?)?.toInt() ?? 0;
+            heartRate = (health['heart_rate'] as num?)?.toInt() ?? 0;
+            distance = (health['distance'] as num?)?.toInt() ?? 0;
+            sleepHours = (health['sleep_hours'] as num?)?.toDouble() ?? 0.0;
+            water = (health['water_liters'] as num?)?.toDouble() ?? 0.0;
 
-              stress = health['stress_level'] ?? "Thấp";
-            }
+            stress = health['stress_level'] ?? "Thấp";
 
-            return SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Xin chào, $firstName! 👋", style: AppStyles.header),
-                            Text(_currentDateString, style: AppStyles.body),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.primary, width: 2),
+            bmi = health['bmi_latest']?.toString() ?? "--";
+          }
+
+          return SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Xin chào, $firstName! 👋",
+                            style: AppStyles.header,
                           ),
-                          child: const CircleAvatar(
-                            radius: 22,
-                            backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'),
+                          Text(_currentDateString, style: AppStyles.body),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 2,
                           ),
                         ),
-                      ],
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 15),
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _toggleTracking,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isTracking ? Colors.redAccent : const Color(0xFF00BFA5),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: const CircleAvatar(
+                          radius: 22,
+                          backgroundImage: NetworkImage(
+                            'https://i.pravatar.cc/150?img=12',
+                          ),
                         ),
-                        icon: Icon(_isTracking ? Icons.stop_circle : Icons.play_circle, color: Colors.white),
-                        label: Text(
-                          _isTracking ? "Dừng theo dõi GPS" : "Bắt đầu chạy bộ (GPS)",
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 15),
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _toggleTracking,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _isTracking
+                            ? Colors.redAccent
+                            : const Color(0xFF00BFA5),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: Icon(
+                        _isTracking ? Icons.stop_circle : Icons.play_circle,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        _isTracking
+                            ? "Dừng theo dõi GPS"
+                            : "Bắt đầu chạy bộ (GPS)",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 30),
+                  ),
+                  const SizedBox(height: 30),
 
-                    _buildModernStepCard(steps, calories, distance),
+                  _buildModernStepCard(steps, calories, distance),
 
-                    const SizedBox(height: 25),
-                    Text("Chỉ số cơ thể", style: AppStyles.title),
-                    const SizedBox(height: 15),
+                  const SizedBox(height: 25),
+                  Text("Chỉ số cơ thể", style: AppStyles.title),
+                  const SizedBox(height: 15),
 
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
-                      children: [
-                        _buildModernStatCard("Nhịp tim", "$heartRate", "bpm", FontAwesomeIcons.heartPulse, AppColors.red),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                    children: [
+                      _buildModernStatCard(
+                        "Chỉ số BMI",
+                        bmi,
+                        bmi == "--" ? "Cập nhật ngay" : "",
+                        FontAwesomeIcons.weightScale,
+                        Colors.teal,
+                        onTap: () {
+                          // Chuyển sang màn hình BMI
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  BMIScreen(userProfile: userProfile),
+                            ),
+                          );
+                        },
+                      ),
 
-                        _buildModernStatCard(
-                            "Giấc ngủ", "${sleepHours}h", "Hôm nay", FontAwesomeIcons.moon, Colors.indigo,
-                            onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const SleepScreen()));
-                            }
-                        ),
+                      _buildModernStatCard(
+                        "Nhịp tim",
+                        "$heartRate",
+                        "bpm",
+                        FontAwesomeIcons.heartPulse,
+                        AppColors.red,
+                      ),
 
-                        _buildModernStatCard("Nước uống", "$water", "Lít", FontAwesomeIcons.glassWater, AppColors.blue),
+                      _buildModernStatCard(
+                        "Giấc ngủ",
+                        "${sleepHours}h",
+                        "Hôm nay",
+                        FontAwesomeIcons.moon,
+                        Colors.indigo,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SleepScreen(),
+                            ),
+                          );
+                        },
+                      ),
 
-                        _buildModernStatCard(
-                            "Căng thẳng", stress, "", FontAwesomeIcons.faceSmile, AppColors.primary,
-                            onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const BreathingScreen()));
-                            }
-                        ),
+                      _buildModernStatCard(
+                        "Nước uống",
+                        "$water",
+                        "Lít",
+                        FontAwesomeIcons.glassWater,
+                        AppColors.blue,
+                      ),
 
-                        _buildModernStatCard(
-                            "HLV Cá nhân",
-                            "Lịch tập",
-                            "",
-                            FontAwesomeIcons.dumbbell,
-                            Colors.orange,
-                            onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutScheduleScreen()));
-                            }
-                        ),
-                      ],
-                    ),
+                      _buildModernStatCard(
+                        "Căng thẳng",
+                        stress,
+                        "",
+                        FontAwesomeIcons.faceSmile,
+                        AppColors.primary,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const BreathingScreen(),
+                            ),
+                          );
+                        },
+                      ),
 
-                    const SizedBox(height: 80),
-                  ],
-                ),
+                      _buildModernStatCard(
+                        "HLV Cá nhân",
+                        "Lịch tập",
+                        "",
+                        FontAwesomeIcons.dumbbell,
+                        Colors.orange,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const WorkoutScheduleScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 80),
+                ],
               ),
-            );
-          }
+            ),
+          );
+        },
       ),
     );
   }
@@ -187,7 +276,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: AppStyles.cardDecoration.copyWith(
         color: AppColors.secondary,
         boxShadow: [
-          BoxShadow(color: AppColors.secondary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+            color: AppColors.secondary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
       child: Column(
@@ -198,10 +291,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Hoạt động", style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const Text(
+                    "Hoạt động",
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                   const SizedBox(height: 8),
-                  Text("$steps", style: GoogleFonts.poppins(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
-                  const Text(" / 6000 bước", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                  Text(
+                    "$steps",
+                    style: GoogleFonts.poppins(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                  ),
+                  const Text(
+                    " / 6000 bước",
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
               CircularPercentIndicator(
@@ -210,7 +320,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 percent: percent,
                 backgroundColor: Colors.white10,
                 progressColor: AppColors.primary,
-                center: const Icon(FontAwesomeIcons.personRunning, color: Colors.white, size: 24),
+                center: const Icon(
+                  FontAwesomeIcons.personRunning,
+                  color: Colors.white,
+                  size: 24,
+                ),
                 circularStrokeCap: CircularStrokeCap.round,
               ),
             ],
@@ -230,7 +344,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildMiniStat(FontAwesomeIcons.locationDot, "$dist", "m"),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -244,19 +358,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
         RichText(
           text: TextSpan(
             children: [
-              TextSpan(text: "$val ", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-              TextSpan(text: unit, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              TextSpan(
+                text: "$val ",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+              TextSpan(
+                text: unit,
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
 
   Widget _buildModernStatCard(
-      String title, String value, String unit, IconData icon, Color color,
-      {VoidCallback? onTap}
-  ) {
+    String title,
+    String value,
+    String unit,
+    IconData icon,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -286,17 +414,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      Text(value, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                      Text(
+                        value,
+                        style: GoogleFonts.poppins(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                      ),
                       if (unit.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(left: 4),
-                          child: Text(unit, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                          child: Text(
+                            unit,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ),
                     ],
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
