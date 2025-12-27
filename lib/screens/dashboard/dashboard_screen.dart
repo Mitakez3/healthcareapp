@@ -339,7 +339,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMiniStat(FontAwesomeIcons.fire, "$cal", "kcal"),
+                _buildMiniStat(FontAwesomeIcons.fire, "$cal", "cal"),
                 Container(width: 1, height: 24, color: Colors.white24),
                 _buildMiniStat(FontAwesomeIcons.locationDot, "$dist", "m"),
               ],

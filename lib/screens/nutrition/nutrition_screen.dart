@@ -46,7 +46,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
         content: TextField(
           controller: goalController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: "Số Calo mục tiêu (kcal)"),
+          decoration: const InputDecoration(labelText: "Số Calo mục tiêu (cal)"),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Hủy")),
@@ -294,7 +294,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
                       return _buildMealSection(
                           m['name'] ?? "Bữa ăn",
-                          "${m['kcal']} kcal",
+                          "${m['cal']} cal",
                           timeDisplay,
                           _getIcon(m['icon']),
                           Colors.orange
@@ -348,7 +348,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     : [
                   const Text("Còn lại", style: TextStyle(color: Colors.grey)),
                   Text("$left", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-                  const Text("kcal", style: TextStyle(color: Colors.grey))
+                  const Text("cal", style: TextStyle(color: Colors.grey))
                 ]
             ),
             progressColor: isCompleted ? Colors.green : const Color(0xFF00BFA5),

@@ -60,7 +60,7 @@ class GPSService {
 
     _positionStreamSubscription =
         Geolocator.getPositionStream(locationSettings: locationSettings).listen(
-          (Position position) {
+              (Position position) {
             if (_lastPosition != null) {
               double distance = Geolocator.distanceBetween(
                 _lastPosition!.latitude,
@@ -191,7 +191,7 @@ class GPSService {
           );
           DateTime nowDate = DateTime.now();
           isSameDay =
-              (lastDate.year == nowDate.year &&
+          (lastDate.year == nowDate.year &&
               lastDate.month == nowDate.month &&
               lastDate.day == nowDate.day);
         }

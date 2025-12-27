@@ -28,7 +28,7 @@ class HealthDataScreen extends StatelessWidget {
               _buildItem("Giấc ngủ", "${data['sleep_hours'] ?? 0} giờ", FontAwesomeIcons.moon, Colors.indigo),
               _buildItem("Stress", "${data['stress_level'] ?? 'N/A'}", FontAwesomeIcons.faceTired, Colors.purple),
               _buildItem("Quãng đường", "${data['distance'] ?? 0} m", FontAwesomeIcons.route, Colors.green),
-              _buildItem("Calories", "${data['calories'] ?? 0} kcal", FontAwesomeIcons.fire, Colors.deepOrange),
+              _buildItem("Calories", "${data['calories'] ?? 0} cal", FontAwesomeIcons.fire, Colors.deepOrange),
             ],
           );
         },
