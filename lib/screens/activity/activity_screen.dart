@@ -193,7 +193,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       child: _buildStatCard(
                         "Calorie",
                         "$calories",
-                        "kcal",
+                        "cal",
                         FontAwesomeIcons.fire,
                         Colors.orange,
                       ),

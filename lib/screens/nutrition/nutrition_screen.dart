@@ -294,7 +294,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
                       return _buildMealSection(
                           m['name'] ?? "Bữa ăn",
-                          "${m['cal']} cal",
+                          "${m['kcal']} cal",
                           timeDisplay,
                           _getIcon(m['icon']),
                           Colors.orange
