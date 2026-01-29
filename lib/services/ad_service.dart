@@ -91,7 +91,13 @@ class AdService {
             GestureDetector(
               onTap: () async {
                 final uri = Uri.parse(ad.linkUrl);
-                if (await canLaunchUrl(uri)) launchUrl(uri);
+                // Thêm mode: LaunchMode.externalApplication để mở hẳn trình duyệt Chrome/Shopee App
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  // Fallback: Cố gắng mở ngay cả khi canLaunchUrl trả về false (đôi khi cần thiết trên 1 số máy)
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
               },
               child: Column(
                 children: [

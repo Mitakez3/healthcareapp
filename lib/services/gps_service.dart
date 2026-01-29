@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-// import 'package:intl/intl.dart'; // Không dùng thì comment lại cho gọn
 
 class GPSService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -13,6 +12,10 @@ class GPSService {
   double _totalDistanceMeters = 0.0;
   int _totalSteps = 0;
   double _sessionDistance = 0.0;
+
+  // Thêm biến để lưu loại hoạt động hiện tại
+  String _currentType = 'walk';
+  String _currentTitle = 'Đi bộ';
 
   Position? _lastPosition;
   bool isTracking = false;
@@ -34,7 +37,8 @@ class GPSService {
     return true;
   }
 
-  Future<void> startTracking() async {
+  // CẬP NHẬT: Nhận thêm tham số type và title
+  Future<void> startTracking({String type = 'walk', String title = 'Đi bộ'}) async {
     if (!await _handlePermission()) return;
 
     isTracking = true;
@@ -42,20 +46,22 @@ class GPSService {
     _totalSteps = 0;
     _sessionDistance = 0.0;
 
+    // Lưu lại loại hình đang tập
+    _currentType = type;
+    _currentTitle = title;
+
     try {
       _lastPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation,
       );
-      print(
-        "START TRACKING: ${_lastPosition!.latitude}, ${_lastPosition!.longitude}",
-      );
+      print("START $_currentTitle ($_currentType): ${_lastPosition!.latitude}, ${_lastPosition!.longitude}");
     } catch (e) {
       print("Lỗi vị trí đầu: $e");
     }
 
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 0,
+      distanceFilter: 0, // Nhận tất cả thay đổi nhỏ nhất
     );
 
     _positionStreamSubscription =
@@ -69,28 +75,26 @@ class GPSService {
                 position.longitude,
               );
 
-              // Lọc nhiễu: Chỉ tính khi di chuyển > 0.2 mét
+              // Lọc nhiễu: Chỉ tính khi di chuyển > 1.5 mét
               if (distance > 1.5) {
-                // Nhân hệ số 2.5 để demo cho nhanh (thực tế nên để 1.0)
-                double realDistance = distance;
+                _totalDistanceMeters += distance;
+                _sessionDistance += distance;
 
-                _totalDistanceMeters += realDistance;
-                _sessionDistance += realDistance;
-
-                // Công thức: 0.7m = 1 bước chân
-                int newSteps = (realDistance / 0.7).ceil();
-
-                print(
-                  "MOVE: +${realDistance.toStringAsFixed(2)}m (+ $newSteps bước) | Session: ${_sessionDistance.toStringAsFixed(2)}m",
-                );
+                // Tính số bước (Ước lượng)
+                // Đi bộ/Chạy: ~0.7m/bước. Đạp xe: Không có bước (nhưng vẫn tính quy đổi để hiện chỉ số vận động)
+                int newSteps = 0;
+                if (_currentType == 'cycle') {
+                  newSteps = (distance / 2.0).ceil(); // Đạp xe tốn ít bước hơn/mét
+                } else {
+                  newSteps = (distance / 0.7).ceil(); // Đi bộ/Chạy
+                }
 
                 if (newSteps > 0) {
                   _totalSteps += newSteps;
-
-                  // Cập nhật realtime lên Firebase
+                  // Cập nhật realtime
                   _updateFirebase(_totalSteps, _totalDistanceMeters);
 
-                  // Reset biến tạm sau khi update
+                  // Reset biến tạm
                   _totalDistanceMeters = 0;
                   _totalSteps = 0;
                 }
@@ -110,11 +114,12 @@ class GPSService {
     _positionStreamSubscription = null;
     _lastPosition = null;
 
+    // Chỉ lưu nếu quãng đường > 10m (tránh bấm nhầm)
     if (_sessionDistance > 10) {
-      print("Đang lưu lịch sử chạy bộ...");
+      print("Đang lưu lịch sử $_currentTitle...");
       await _saveSessionHistory();
     } else {
-      print("Quãng đường quá ngắn, không lưu.");
+      print("Quãng đường quá ngắn (${_sessionDistance.toInt()}m), không lưu.");
     }
     _sessionDistance = 0.0;
   }
@@ -146,15 +151,17 @@ class GPSService {
             }
           }
         }
+
+        // CẬP NHẬT: Lưu đúng title và type hiện tại
         currentHistory.add({
-          'title': "Đi bộ",
+          'title': _currentTitle, // Ví dụ: "Đạp xe"
           'time': timestamp,
           'stat': statStr,
-          'type': 'walk',
+          'type': _currentType,   // Ví dụ: "cycle"
         });
         return Transaction.success(currentHistory);
       });
-      print("Đã lưu lịch sử.");
+      print("Đã lưu lịch sử thành công.");
     } catch (e) {
       print("Lỗi lưu lịch sử: $e");
     }
@@ -169,56 +176,51 @@ class GPSService {
         final int nowTimestamp = DateTime.now().millisecondsSinceEpoch;
         int distanceInt = distanceToAdd.round();
 
-        if (post == null) {
-          int cal = (stepsToAdd / 30).floor();
+        // Tính Calo:
+        // Đi bộ: ~30 bước = 1 cal
+        // Đạp xe: Tốn ít calo hơn cho cùng quãng đường quy đổi
+        int caloriesBurned = 0;
+        if (_currentType == 'cycle') {
+          caloriesBurned = (stepsToAdd / 60).floor(); // Đạp xe nhẹ hơn
+        } else if (_currentType == 'run') {
+          caloriesBurned = (stepsToAdd / 20).floor(); // Chạy tốn nhiều hơn
+        } else {
+          caloriesBurned = (stepsToAdd / 30).floor(); // Đi bộ
+        }
 
+        if (post == null) {
           return Transaction.success({
             'steps': stepsToAdd,
             'distance': distanceInt,
-            'calories': cal,
+            'calories': caloriesBurned,
             'timestamp': nowTimestamp,
           });
         }
 
-        // Trường hợp đã có dữ liệu (Cập nhật)
         Map<String, dynamic> data = Map<String, dynamic>.from(post as Map);
-
         int lastTimestamp = (data['timestamp'] as num?)?.toInt() ?? 0;
+
+        // Kiểm tra qua ngày mới
         bool isSameDay = false;
         if (lastTimestamp > 0) {
-          DateTime lastDate = DateTime.fromMillisecondsSinceEpoch(
-            lastTimestamp,
-          );
+          DateTime lastDate = DateTime.fromMillisecondsSinceEpoch(lastTimestamp);
           DateTime nowDate = DateTime.now();
-          isSameDay =
-          (lastDate.year == nowDate.year &&
-              lastDate.month == nowDate.month &&
-              lastDate.day == nowDate.day);
+          isSameDay = (lastDate.year == nowDate.year && lastDate.month == nowDate.month && lastDate.day == nowDate.day);
         }
 
-        int totalStepsToday = 0;
-
         if (!isSameDay) {
-          // Sang ngày mới -> Reset về 0 rồi cộng thêm lượng mới
           data['steps'] = stepsToAdd;
           data['distance'] = distanceInt;
-          totalStepsToday = stepsToAdd;
+          data['calories'] = caloriesBurned;
         } else {
-          // Cùng ngày -> Cộng dồn vào số cũ
           int currentSteps = (data['steps'] as num?)?.toInt() ?? 0;
           int currentDist = (data['distance'] as num?)?.toInt() ?? 0;
+          int currentCal = (data['calories'] as num?)?.toInt() ?? 0;
 
           data['steps'] = currentSteps + stepsToAdd;
           data['distance'] = currentDist + distanceInt;
-
-          totalStepsToday = data['steps'];
+          data['calories'] = currentCal + caloriesBurned;
         }
-
-        // --- CÔNG THỨC MỚI: TÍNH CALO DỰA TRÊN TỔNG SỐ BƯỚC ---
-        // Lấy tổng số bước chia cho 30, lấy phần nguyên.
-        // Ví dụ: 29 bước -> 0 cal. 30 bước -> 1 cal. 65 bước -> 2 cal.
-        data['calories'] = (totalStepsToday / 30).floor();
-        // -----------------------------------------------------
 
         data['timestamp'] = nowTimestamp;
         return Transaction.success(data);
