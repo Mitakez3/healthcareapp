@@ -46,6 +46,8 @@ dependencies:
   image_picker: ^1.0.7
   url_launcher: ^6.2.1
   crypto: ^3.0.3
+  tflite_flutter: ^0.12.1    # Chạy mô hình AI offline
+  sensors_plus: ^7.0.0       # Đọc dữ liệu gia tốc kế (Accelerometer)
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -68,6 +70,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/tflite/har_custom_model.tflite
+    - assets/tflite/custom_labels.txt
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
