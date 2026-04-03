@@ -22,7 +22,6 @@ class ActivityRecognitionService {
   int _lastStepTime = 0;
   bool _isStepActive = false;
   final double _stepLengthWalking = 0.7;
-  // Đã xóa bỏ stepLengthRunning theo yêu cầu
 
   // CÁC BIẾN THEO DÕI TÉ NGÃ
   bool _isCheckingFall = false;
@@ -92,7 +91,7 @@ class ActivityRecognitionService {
 
           int currentTime = DateTime.now().millisecondsSinceEpoch;
 
-          // 2. BỘ ĐẾM BƯỚC CHÂN (GIỮ NGUYÊN 100% NHƯ BẢN CHUẨN CỦA ÔNG)
+          // 2. BỘ ĐẾM BƯỚC CHÂN
           if (!_isWarmup) {
             if (smoothMag > 1.3 && !_isStepActive) {
               if (currentTime - _lastStepTime > 300) {
@@ -181,9 +180,6 @@ class ActivityRecognitionService {
       }
       double amplitude = maxMag - minMag;
 
-      // ==========================================================
-      // XỬ LÝ TÉ NGÃ SAU KHI NÉM
-      // ==========================================================
       if (_isCheckingFall) {
         if (currentTime - _fallCheckStartTime < 4000) {
           // Đợi 4 giây để quá trình nhào lộn / rớt kết thúc hoàn toàn
@@ -204,9 +200,6 @@ class ActivityRecognitionService {
         }
       }
 
-      // ==========================================================
-      // LỌC ĐI / ĐỨNG / NGỒI (KHI KHÔNG CÓ NGÃ)
-      // ==========================================================
       if (!_isCheckingFall &&
           detectedActivity != "Analyzing..." &&
           detectedActivity != "Fall") {
